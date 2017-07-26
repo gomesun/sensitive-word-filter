@@ -1,9 +1,11 @@
 package com.hlin.sensitive.processor;
 
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.google.common.collect.Lists;
 import com.hlin.sensitive.KeyWord;
 import com.hlin.sensitive.util.AnalysisUtil;
 
@@ -43,8 +45,8 @@ public class Highlight implements Processor {
                 pre = chr;
                 continue;
             }
-
-            KeyWord kw = AnalysisUtil.getSensitiveWord(chr, pre, nextWord, text);
+            List<KeyWord> keywords = Lists.newArrayList();
+            KeyWord kw = AnalysisUtil.getSensitiveWord(chr, pre, nextWord, text, keywords);
             // 没有匹配到完整关键字，下一个循环
             if (kw == null) {
                 result.append(chr);

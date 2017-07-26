@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.google.common.collect.Lists;
 import com.hlin.sensitive.KeyWord;
 import com.hlin.sensitive.SensitiveWordResult;
 import com.hlin.sensitive.util.AnalysisUtil;
@@ -47,22 +48,28 @@ public class WordFinder implements Processor {
                     pre = chr;
                     continue;
                 }
-                KeyWord kw = AnalysisUtil.getSensitiveWord(chr, pre, nextWord, text);
-                if (kw == null) {
+
+                List<KeyWord> keywords = Lists.newArrayList();
+                KeyWord kw = AnalysisUtil.getSensitiveWord(chr, pre, nextWord, text, keywords);
+                if (keywords == null || keywords.size() == 0) {
                     // 没有匹配到完整关键字，下一个循环
                     pre = chr;
                     continue;
                 }
-                // 同一个word多次出现记录在一起
-                SensitiveWordResult result = new SensitiveWordResult(startPosition, kw.getWord());
-                int index = rs.indexOf(result);
-                if (index > -1) {
-                    rs.get(index).addPosition(startPosition, kw.getWord());
-                } else {
-                    rs.add(result);
+                for (KeyWord tmp : keywords) {
+                    // 同一个word多次出现记录在一起
+                    SensitiveWordResult result = new SensitiveWordResult(startPosition, tmp.getWord());
+                    int index = rs.indexOf(result);
+                    if (index > -1) {
+                        rs.get(index).addPosition(startPosition, tmp.getWord());
+                    } else {
+                        rs.add(result);
+                    }
                 }
+
                 // 从text中去除当前已经匹配的内容，进行下一个循环匹配
-                text = text.substring(kw.getWordLength() - 1);
+                // 这行注释了，避免"中国人"，导致"国人"。搜索不出来，逐个字符遍历
+                // text = text.substring(kw.getWordLength() - 1);
                 pre = kw.getWord().substring(kw.getWordLength() - 1, kw.getWordLength());
                 continue;
             } finally {

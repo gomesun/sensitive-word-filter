@@ -30,6 +30,9 @@ public class KWSeekerManageTest {
 
         test2();
 
+		System.out.println("\n************************************************\n");
+
+        test3();
     }
 
     /**
@@ -127,4 +130,19 @@ public class KWSeekerManageTest {
         System.out.println("字符替换：" + r2);
 
     }
+
+    /**
+     * bug fix, 关键字互相包含，也能正确搜索出来。 gomesun
+     */
+    public static void test3() {
+        Set<KeyWord> kws = new HashSet<KeyWord>();
+        kws.add(new KeyWord("中"));
+        kws.add(new KeyWord("中国"));
+        kws.add(new KeyWord("中国人"));
+        kws.add(new KeyWord("国人"));
+        KWSeeker kwSeeker = new KWSeeker(kws);
+        List<SensitiveWordResult> findWords = kwSeeker.findWords("我是中国人来的，真的是中国人来的");
+        System.out.println(findWords);
+    }
+
 }

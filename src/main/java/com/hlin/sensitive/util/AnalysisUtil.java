@@ -2,6 +2,7 @@ package com.hlin.sensitive.util;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -90,16 +91,17 @@ public class AnalysisUtil {
     }
 
     /**
-     * 查询文本开头的词是否在词库树中，如果在，则返回对应的词，如果不在，则返回null。
+     * 查询文本开头的词是否在词库树中，如果在，则返回对应的词，如果不在，则返回null。return 返回找到的最长关键词
      * 
      * @param append 追加的词
      * @param pre 词的前一个字，如果为空，则表示前面没有内容
      * @param nextWordsTree 下一层树
      * @param text 剩余的文本内容
-     * @return 返回找到的词
+     * @param keywords 返回的keywords，可能多个
+     * @return 返回找到的最长关键词
      */
     public static KeyWord getSensitiveWord(String append, String pre,
-            Map<String, Map> nextWordsTree, String text) {
+                    Map<String, Map> nextWordsTree, String text, List<KeyWord> keywords) {
         if (nextWordsTree == null || nextWordsTree.isEmpty()) {
             return null;
         }
@@ -109,6 +111,7 @@ public class AnalysisUtil {
         if (StringUtils.isEmpty(text)) {
             // 如果有结束符，则表示匹配成功，没有，则返回null
             if (endTag != null) {
+                keywords.add(checkPattern(getKeyWord(append, endTag), pre, null));
                 return checkPattern(getKeyWord(append, endTag), pre, null);
             } else {
                 return null;
@@ -123,18 +126,21 @@ public class AnalysisUtil {
         if (endTag == null) {
             if (nextTree != null && nextTree.size() > 0) {
                 // 没有结束标志，则表示关键词没有结束，继续往下走。
-                return getSensitiveWord(append + next, pre, nextTree, text.substring(1));
+                return getSensitiveWord(append + next, pre, nextTree, text.substring(1), keywords);
             }
 
             // 如果没有下一个匹配的字，表示匹配结束！
             return null;
+        } else { // endTag ， 添加关键字
+            KeyWord tmp = getKeyWord(append, endTag);
+            keywords.add(checkPattern(tmp, pre, suffix));
         }
 
         // 有下一个匹配的词则继续匹配，一直取到最大的匹配关键字
         KeyWord tmp = null;
         if (nextTree != null && nextTree.size() > 0) {
             // 如果大于0，则表示还有更长的词，继续往下找
-            tmp = getSensitiveWord(append + next, pre, nextTree, text.substring(1));
+            tmp = getSensitiveWord(append + next, pre, nextTree, text.substring(1), keywords);
             if (tmp == null) {
                 // 没有更长的词，则就返回这个词。在返回之前，先判断它是模糊的，还是精确的
                 tmp = getKeyWord(append, endTag);
